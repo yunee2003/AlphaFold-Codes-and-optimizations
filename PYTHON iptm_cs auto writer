@@ -1,0 +1,163 @@
+import os
+import sys
+
+def letter_to_index(letter):
+    """
+    Convert Excel-style column letters to zero-based indices.
+    """
+    letter = letter.upper()
+    idx = 0
+    for char in letter:
+        if 'A' <= char <= 'Z':
+            idx = idx * 26 + (ord(char) - ord('A') + 1)
+        else:
+            raise ValueError(f"Invalid column letter: {letter}")
+    return idx - 1
+
+# === Configuration ===
+START_BATCH = #     # Starting batch number (inclusive)
+END_BATCH   = #      # Ending batch number (inclusive)
+
+SM_PROT = "T"
+BASE_DIR_TEMPLATE = "/users/jpark2/alphafold/outputs_{sm_prot}batch{batch}"
+
+# Output directory for generated scripts
+SCRIPT_DIR = r"C:\Users\Andre\OneDrive\Desktop\Research\Batch Files\IPTM CS"
+
+os.makedirs(SCRIPT_DIR, exist_ok=True)
+
+# IPTM extraction script template
+IPTM_TEMPLATE = """import os
+import pickle
+
+# Define your base output directory
+base_dir = "{base_dir}"
+
+for output_folder in os.listdir(base_dir):
+    output_path = os.path.join(base_dir, output_folder)
+    if not os.path.isdir(output_path):
+        continue
+
+    subfolders = os.listdir(output_path)
+    if not subfolders:
+        continue
+
+    subdir = os.path.join(output_path, subfolders[0])
+    print(f"=== Results for {{output_folder}} ===")
+
+    for filename in os.listdir(subdir):
+        if filename.startswith("result_model") and filename.endswith(".pkl"):
+            full_path = os.path.join(subdir, filename)
+            with open(full_path, "rb") as f:
+                result = pickle.load(f)
+
+            iptm = result.get('iptm', 'N/A')
+            ptm  = result.get('ptm',  'N/A')
+            plddt = result.get('plddt', [])
+
+            if hasattr(plddt, '__len__') and len(plddt) > 0:
+                mean_plddt = sum(plddt) / len(plddt)
+            else:
+                mean_plddt = "N/A"
+
+            if isinstance(iptm, (int, float)) and isinstance(ptm, (int, float)):
+                print(f"{{filename}}: ipTM={{iptm:.4f}}, pTM={{ptm:.4f}}, mean pLDDT={{mean_plddt:.2f}}")
+            else:
+                print(f"{{filename}}: ipTM={{iptm}}, pTM={{ptm}}, mean pLDDT={{mean_plddt}}")
+"""
+
+# IPTM + confidence scores script template
+IPTM_CS_TEMPLATE = """import os
+import pickle
+import numpy as np
+
+# Define your base output directory
+base_dir = "{base_dir}"
+
+for output_folder in os.listdir(base_dir):
+    output_path = os.path.join(base_dir, output_folder)
+    if not os.path.isdir(output_path):
+        continue
+
+    subfolders = os.listdir(output_path)
+    if not subfolders:
+        continue
+    subdir = os.path.join(output_path, subfolders[0])
+    print(f"=== Results for {{output_folder}} ===")
+
+    model_data = []
+    for filename in os.listdir(subdir):
+        if not (filename.startswith("result_model") and filename.endswith(".pkl")):
+            continue
+        full_path = os.path.join(subdir, filename)
+        with open(full_path, "rb") as f:
+            result = pickle.load(f)
+
+        iptm = result.get('iptm', 0.0)
+        ptm  = result.get('ptm',  0.0)
+        plddt_array = np.array(result.get('plddt', []))
+        if plddt_array.size > 0:
+            mean_plddt = float(np.mean(plddt_array))
+        else:
+            mean_plddt = 0.0
+
+        confidence = iptm * ptm
+        model_data.append((filename, iptm, ptm, mean_plddt, confidence))
+
+    model_data.sort(key=lambda x: x[1], reverse=True)
+
+    for fname, iptm, ptm, mean_plddt, conf in model_data:
+        print(f"{{fname}}: ipTM={{iptm:.4f}}, pTM={{ptm:.4f}}, mean pLDDT={{mean_plddt:.2f}}, confidence={{conf:.4f}}")
+
+    high_conf = [m for m in model_data if m[4] > 0.5]
+    if high_conf:
+        print(f"-> {{len(high_conf)}} model(s) with confidence > 0.5")
+    else:
+        print("-> No models with confidence > 0.5")
+
+    high_iptm = [m for m in model_data if m[1] > 0.75]
+    if high_iptm:
+        print(f"-> {{len(high_iptm)}} model(s) with ipTM > 0.75")
+    else:
+        print("-> No models with ipTM > 0.75")
+"""
+
+def generate_IPTM(batch_number: int):
+    """
+    Generate an IPTM.py script for the given batch number.
+    """
+    batch_str = f"{batch_number:02d}"
+    base_dir = BASE_DIR_TEMPLATE.format(sm_prot=SM_PROT, batch=batch_str)
+    content  = IPTM_TEMPLATE.format(base_dir=base_dir)
+    filename = f"extract_ptm_iptm_{SM_PROT}batch{batch_str}.py"
+    path     = os.path.join(SCRIPT_DIR, filename)
+
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    os.chmod(path, 0o755)
+    print(f"Generated {path}")
+
+def generate_IPTM_CS(batch_number: int):
+    """
+    Generate an IPTM_CS.py script for the given batch number.
+    """
+    batch_str = f"{batch_number:02d}"
+    base_dir = BASE_DIR_TEMPLATE.format(sm_prot=SM_PROT, batch=batch_str)
+    content  = IPTM_CS_TEMPLATE.format(base_dir=base_dir)
+    filename = f"extract_ptm_iptm_cs_{SM_PROT}batch{batch_str}.py"
+    path     = os.path.join(SCRIPT_DIR, filename)
+
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    os.chmod(path, 0o644)
+    print(f"Generated {path}")
+
+def main():
+    if START_BATCH > END_BATCH:
+        sys.exit("START_BATCH must be <= END_BATCH")
+    for n in range(START_BATCH, END_BATCH + 1):
+        generate_IPTM(n)
+        generate_IPTM_CS(n)
+
+if __name__ == '__main__':
+    main()

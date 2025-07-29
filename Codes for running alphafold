@@ -1,0 +1,18 @@
+### ======= TEMPLATE FOR RUNNING ALPHA FOLD ======= ###
+---------------------------------------
+
+srun --partition=gpu --gres=gpu:1 --cpus-per-task=4 --mem=32G --time=2:00:00 --pty bash
+
+module load alphafold/2.3.1
+
+--------------------------------------------------------------------------
+
+chmod +x /users/your_username/alphafold/batch??/run_batch??_wrapper.sh
+
+------------------------------------------------------------------------------
+
+##submit job
+sbatch /users/jpark2/alphafold/batch??/batch??.slurm
+
+##check job (change jobID)
+sacct -j ________ --format=JobID,Elapsed,MaxRSS,MaxVMSize,ReqMem,State

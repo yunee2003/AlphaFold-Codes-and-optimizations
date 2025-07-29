@@ -1,0 +1,73 @@
+import pandas as pd
+import os
+import sys
+
+# === User-specific settings ===
+INPUT_FILE = r"Path_to_your_Excel_file.xlsx"
+SHEET_NAME = "your_sheet_name"
+# If you put your sequence names in column A and your sequence(s) in column B, we’ll grab Excel columns A and B by letter and rename them to meaningful names
+COLUMN1 = "Sequence Name"   # formerly Excel col A
+COLUMN2 = "Sequence" # formerly Excel col B
+OUTPUT_DIR = r"path_to_your_desired_directory/folder"
+
+# Constant FASTA entry
+CONST_HEADER = ">name_of_prot (ex:EGF)"
+CONST_SEQUENCE = (
+    "amino_acid_seq (ex:NSDSECPLSHDGYCLHDGVCMYIEALDKYACNCVVGYIGERCQYRDLKWWELR)"
+)
+
+
+def read_excel(path, sheet_name):
+    try:
+        # Read only columns A and B, then rename to COLUMN1/COLUMN2
+        df = pd.read_excel(
+            path,
+            sheet_name=sheet_name,
+            usecols="A,B",
+            header=0,
+            names=[COLUMN1, COLUMN2]
+        )
+    except Exception as e:
+        sys.exit(f"Error reading Excel file '{path}': {e}")
+    return df
+
+
+def write_all_fasta(df, col1, col2, outdir, const_header, const_seq):
+    # Verify the renamed columns exist
+    missing = [c for c in (col1, col2) if c not in df.columns]
+    if missing:
+        sys.exit(f"Columns not found in input: {', '.join(missing)}")
+
+    os.makedirs(outdir, exist_ok=True)
+    count = 0
+
+    for _, row in df.iterrows():
+        header_val = str(row[col1]).strip()
+        seq_val = str(row[col2]).strip()
+        if not header_val or header_val.lower() == 'nan':
+            continue  # skip empty or NaN
+
+        outfile = os.path.join(outdir, f"{header_val}.fasta")
+        with open(outfile, 'w') as f:
+            f.write(f">{header_val}\n")
+            f.write(f"{seq_val}\n")
+            f.write(f"{const_header}\n")
+            f.write(f"{const_seq}\n")
+
+        count += 1
+        print(f"Wrote {outfile}")
+
+    print(f"Total files written: {count}")
+
+
+if __name__ == '__main__':
+    df = read_excel(INPUT_FILE, SHEET_NAME)
+    print("Loaded columns:", df.columns.tolist())
+    write_all_fasta(
+        df,
+        col1=COLUMN1,
+        col2=COLUMN2,
+        outdir=OUTPUT_DIR,
+        const_header=CONST_HEADER,
+        const_seq=CONST_SEQUENCE
+    )

@@ -17,9 +17,10 @@ def letter_to_index(letter):
 # === Configuration ===
 START_BATCH = #     # Starting batch number (inclusive)
 END_BATCH   = #      # Ending batch number (inclusive)
+SM_PROT = "T"   #
+USER_NAME =  "(user name)"     # input ur ssh/jhpce username
 
-SM_PROT = "T"
-BASE_DIR_TEMPLATE = "/users/jpark2/alphafold/outputs_{sm_prot}batch{batch}"
+BASE_DIR_TEMPLATE = "/fastscratch/myscratch/{user_name}/outputs_{sm_prot}batch{batch}"
 
 # Output directory for generated scripts
 SCRIPT_DIR = r"C:\Users\Andre\OneDrive\Desktop\Research\Batch Files\IPTM CS"

@@ -24,6 +24,8 @@ USER_NAME       = "(Your username)"     #Input ur SSH/JHPCE username
 
 # Base directory where the code will create a single batch folder
 SCRIPT_DIR      = r"C:\path\to\your\output\directory"
+SCRIPT_DIR      = r"C:\path\to\your\output\directory"  # Path to the output folder on your computer
+
 SH_PATH         = "/fastscratch/myscratch/{user_name}/alphafold/"  # On-cluster path to wrappers
 
 FASTA_DIR_TEMPLATE = "/fastscratch/myscratch/{user_name}/alphafold/fasta_{sm_prot}batch{batch}"

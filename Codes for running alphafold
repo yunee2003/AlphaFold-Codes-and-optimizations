@@ -1,18 +1,19 @@
-### ======= TEMPLATE FOR RUNNING ALPHA FOLD ======= ###
----------------------------------------
+# ======= TEMPLATE FOR RUNNING ALPHA FOLD =======-
+
+
+## 1. Code for loading in alphafold. 
+###You must do this before you can run anything. 
 
 srun --partition=gpu --gres=gpu:1 --cpus-per-task=4 --mem=32G --time=2:00:00 --pty bash
 
 module load alphafold/2.3.1
 
---------------------------------------------------------------------------
+## 2. Then, you have to activate the run_[]batch[#]_wrapper.sh file:
 
-chmod +x /users/your_username/alphafold/batch??/run_batch??_wrapper.sh
+chmod +x /path/to/file/run_[]batch[#]_wrapper.sh    # Can be either /users/[username]/[folder]/....  or /fastscratch/myscratch/[username]/[folder]/....
 
-------------------------------------------------------------------------------
-
-##submit job
+## 3. Submit the job
 sbatch /users/jpark2/alphafold/batch??/batch??.slurm
 
-##check job (change jobID)
+## 4. Check the job (change jobID/replace region with _____ with the jobID)
 sacct -j ________ --format=JobID,Elapsed,MaxRSS,MaxVMSize,ReqMem,State

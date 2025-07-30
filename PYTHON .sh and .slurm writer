@@ -16,25 +16,28 @@ def letter_to_index(letter):
     return idx - 1
 
 # === Configuration ===
-START_BATCH = #      # Starting batch number (inclusive)
-END_BATCH   = #      # Ending batch number (inclusive)
-SM_PROT = "T"        # "Small Protein" like EGF (E) or TGFa (T). Here, Im using TGFa as an example. Change it to whatever small protein you are testing. 
+START_BATCH     = 1    # Starting batch number (inclusive)
+END_BATCH       = 5    # Ending batch number (inclusive)
+SM_PROT         = "T"  # e.g. "E" for EGF, "T" for TGFa, etc.
 
-SCRIPT_DIR = r"path\to\your\output\directory\or\file\on\your\computer" 
-SH_PATH = "___"      # Path to where your .sh file is on the SSH client ending in "/"  (ex: "/fastscratch/myscratch/jpark2/alphafold/") 
-SLURM_PATH "_____"   # Path to where your .sh file is on the SSH flient, ending in "/"  (ex: "/fastscratch/myscratch/jpark2/alphafold/") 
-FASTA_DIR_TEMPLATE = "/path/to/your/SSH/fasta-directory/fasta_{sm_prot}batch{batch}"    # for ex: "/users/jpark2/alphafold/fasta_{sm_prot}batch{batch}" or "/fastscratch/myscratch/jpark2/alphafold/fasta_{sm_prot}batch{batch}"
-OUT_DIR_TEMPLATE   = "/path/to/your/SSH/output-directory/outputs_(sm_prot}batch{batch}"
+USER_NAME       = "(Your username)"     #Input ur SSH/JHPCE username
 
+# Base directory where the code will create a single batch folder
+SCRIPT_DIR      = r"C:\path\to\your\output\directory"
+SH_PATH         = "/fastscratch/myscratch/{user_name}/alphafold/"  # On-cluster path to wrappers
+
+FASTA_DIR_TEMPLATE = "/fastscratch/myscratch/{user_name}/alphafold/fasta_{sm_prot}batch{batch}"
+OUT_DIR_TEMPLATE   = "/fastscratch/myscratch/{user_name}/alphafold/outputs_{sm_prot}batch{batch}"
 
 DATA_DIR = "/legacy/alphafold/data"
 DATE     = "2020-05-14"
 N_CPU    = 8
 
-# Output directory for generated scripts
-os.makedirs(SCRIPT_DIR, exist_ok=True)
+# Create one master batch folder inside SCRIPT_DIR
+master_folder = os.path.join(SCRIPT_DIR, f"{SM_PROT}Batch")
+os.makedirs(master_folder, exist_ok=True)
 
-# Shell (.sh) script template
+# === Shell wrapper template ===
 SH_TEMPLATE = """#!/bin/bash
 
 # Define paths and parameters
@@ -45,108 +48,79 @@ DATE=\"{date}\"
 N_CPU={n_cpu}
 
 # Loop through all FASTA files and run AlphaFold-Multimer
-for fasta in \"$FASTA_DIR\"/*.fasta; do
-    name=$(basename \"$fasta\" .fasta)
-    echo \"Running prediction for $name\"
+for fasta in "\$FASTA_DIR"/*.fasta; do
+    name=$(basename "\$fasta" .fasta)
+    echo "Running prediction for $name"
     run_alphafold.sh \\
-        -d \"$DATA_DIR\" \\
-        -o \"$OUT_DIR/${{name}}_output\" \\
-        -f \"$fasta\" \\
-        -t \"$DATE\" \\
-        -n \"$N_CPU\" \\
+        -d "\$DATA_DIR" \\
+        -o "\$OUT_DIR/${{name}}_output" \\
+        -f "\$fasta" \\
+        -t "\$DATE" \\
+        -n "\$N_CPU" \\
         -m multimer
-done"""
+done
+"""
 
-# Slurm (.slurm) script template
+# === Slurm job template ===
 SLURM_TEMPLATE = """#!/bin/bash
 #SBATCH --job-name={sm_prot}batch{batch}
 #SBATCH --output={sm_prot}batch{batch}_%j.out
 #SBATCH --error={sm_prot}batch{batch}_%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=YOUR_EMAIL!!!!!
+#SBATCH --mail-user=YOUR_EMAIL@domain.com
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task={n_cpu}
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --partition=gpu
 #SBATCH --time=72:00:00
 
-# Load AlphaFold module (must be run on a GPU compute node)
 module load alphafold/2.3.1
 
-# Run the wrapper script for batch {batch}
-bash "{sh_path}run_{sm_prot}batch{batch}_wrapper.sh" 
+bash "{sh_path}run_{sm_prot}batch{batch}_wrapper.sh"
+"""
 
 def generate_sh(batch_number: int):
-    """
-    Generate a shell wrapper (.sh) script for the given batch number.
-    """
     batch_str = f"{batch_number:02d}"
-    fasta_dir = FASTA_DIR_TEMPLATE.format(batch=batch_str)
-    out_dir   = OUT_DIR_TEMPLATE.format(batch=batch_str)
-    content = SH_TEMPLATE.format(
+    # Compute paths
+    fasta_dir = FASTA_DIR_TEMPLATE.format(sm_prot=SM_PROT, batch=batch_str)
+    out_dir   = OUT_DIR_TEMPLATE.format(sm_prot=SM_PROT, batch=batch_str)
+    content   = SH_TEMPLATE.format(
         fasta_dir=fasta_dir,
         out_dir=out_dir,
         data_dir=DATA_DIR,
         date=DATE,
         n_cpu=N_CPU
     )
-    filename = f"run_{sm_prot}batch{batch_str}_wrapper.sh"
-    path = os.path.join(SCRIPT_DIR, filename)
-    # Write with explicit Unix line endings
+    filename  = f"run_{SM_PROT}batch{batch_str}_wrapper.sh"
+    path      = os.path.join(master_folder, filename)
     with open(path, 'w', newline='\n') as f:
         f.write(content)
     os.chmod(path, 0o755)
-    print(f"Generated {path}")
-
+    print(f"Generated wrapper: {path}")
 
 def generate_slurm(batch_number: int):
-    """
-    Generate a Slurm job (.slurm) script for the given batch number.
-    Ensure no Windows CRLF endings.
-    """
     batch_str = f"{batch_number:02d}"
-    content = SLURM_TEMPLATE.format(batch=batch_str)
-    filename = f"{sm_prot}batch{batch_str}.slurm"
-    path = os.path.join(SCRIPT_DIR, filename)
-    # Write with explicit Unix line endings
+    content   = SLURM_TEMPLATE.format(
+        sm_prot=SM_PROT,
+        batch=batch_str,
+        n_cpu=N_CPU,
+        sh_path=SH_PATH
+    )
+    filename  = f"{SM_PROT}batch{batch_str}.slurm"
+    path      = os.path.join(master_folder, filename)
     with open(path, 'w', newline='\n') as f:
         f.write(content)
     os.chmod(path, 0o644)
-    print(f"Generated {path}")
-
+    print(f"Generated Slurm: {path}")
 
 def main():
     if START_BATCH > END_BATCH:
-        sys.exit("START_BATCH must be <= END_BATCH")
+        sys.exit("ERROR: START_BATCH must be <= END_BATCH")
     for num in range(START_BATCH, END_BATCH + 1):
         generate_sh(num)
         generate_slurm(num)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
 
-# ======= Tests =======
-if False:
-    # Validate letter_to_index
-    assert letter_to_index('A') == 0
-    assert letter_to_index('Z') == 25
-    assert letter_to_index('AA') == 26
-    # Validate script and slurm generation
-    import tempfile
-    tmp = tempfile.mkdtemp()
-    old = SCRIPT_DIR
-    SCRIPT_DIR = tmp
-    for batch in (START_BATCH, END_BATCH):
-        generate_sh(batch)
-        generate_slurm(batch)
-        expected_sh = os.path.join(tmp, f"run_{sm_prot}batch{batch:02d}_wrapper.sh")
-        expected_slurm = os.path.join(tmp, f"{sm_prot}batch{batch:02d}.slurm")
-        assert os.path.exists(expected_sh), f"Missing {expected_sh}"
-        # Check slurm uses LF only
-        with open(expected_slurm, 'rb') as f:
-            data = f.read()
-            assert b'\r' not in data, "CR character found in slurm file"
-        assert os.path.exists(expected_slurm), f"Missing {expected_slurm}"
-    SCRIPT_DIR = old

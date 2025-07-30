@@ -23,7 +23,7 @@ USER_NAME =  "(user name)"     # input ur ssh/jhpce username
 BASE_DIR_TEMPLATE = "/fastscratch/myscratch/{user_name}/outputs_{sm_prot}batch{batch}"
 
 # Output directory for generated scripts
-SCRIPT_DIR = r"C:\Users\Andre\OneDrive\Desktop\Research\Batch Files\IPTM CS"
+SCRIPT_DIR = r"path_to_your_folder"
 
 os.makedirs(SCRIPT_DIR, exist_ok=True)
 

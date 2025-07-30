@@ -10,8 +10,8 @@ COLUMN1           = "Sequence Name"   # Excel column header for sequence names
 COLUMN2           = "Sequence"        # Excel column header for sequences
 OUTPUT_DIR        = r"path_to_your_desired_directory"  # base output directory
 
-CONST_HEADER      = ">name_of_prot (ex:EGF)"
-CONST_SEQUENCE    = ("amino_acid_seq (ex:NSDSECPLSHDGYCLHDGVCMYIEALDKYACNCVVGYIGERCQYRDLKWWELR)")
+CONST_HEADER      = ">name_of_prot"     # (ex: "EGF")
+CONST_SEQUENCE    = ("amino_acid_seq")      #  (ex: "NSDSECPLSHDGYCLHDGVCMYIEALDKYACNCVVGYIGERCQYRDLKWWELR")   
 
 SM_PROT           = "T"   # e.g. 'E' for EGF, 'T' for TGFa
 FILES_PER_FOLDER  = 15    # how many fasta files per subfolder

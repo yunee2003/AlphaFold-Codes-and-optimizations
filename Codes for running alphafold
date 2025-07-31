@@ -19,4 +19,5 @@ sbatch /users/[username]/alphafold/batch??.slurm
 sacct -j ________ --format=JobID,Elapsed,MaxRSS,MaxVMSize,ReqMem,State
 
 ## 5. After alphafold outputs its files, extract iptm information
+python extract_ptm_iptm_cs_[]batch[#].py
 

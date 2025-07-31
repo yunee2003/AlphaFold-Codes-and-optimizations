@@ -50,7 +50,7 @@ def write_all_fasta(df, col1, col2, base_outdir, const_header, const_seq,
         batch_idx = (count // files_per_folder) + 1
         batch_folder = os.path.join(
             base_outdir,
-            f"{sm_prot}Batch{batch_idx:02d}"
+            f"fasta_{sm_prot}Batch{batch_idx:02d}"
         )
         os.makedirs(batch_folder, exist_ok=True)
 

@@ -55,6 +55,7 @@ Personalize the following code:
 
 ```python
 # === Configuration ===
+YOUR_EMAIL      = "_____"
 START_BATCH     = 1    # Starting batch number (inclusive)
 END_BATCH       = 5    # Ending batch number (inclusive)
 SM_PROT         = "T"  # e.g. "E" for EGF, "T" for TGFa, etc.
@@ -113,7 +114,96 @@ Like the section above, you can edit the path for "Base_dir_template" if your pr
 
 ### 1. Log into the cluster + start alphafold: 
 
+![logging into SSH session](https://github.com/user-attachments/assets/f83d5ed4-2a99-4745-8cb0-7274933e39af)
 
+1. Press the "Session" button and select "SSH"
+2. Type in **jhpce01.jhsph.edu** as the remote host
+3. Press the "Specify username" button and type in your unique JHPCE username.
+4. Make sure your port is **22** and then press "OK"
+5. Type in your password + verification code (or just verification code), which should take you to the cluster's SSH session.
+6. Type in the following code to connect to a node:
+   ```
+   srun --partition=gpu --gres=gpu:1 --cpus-per-task=4 --mem=32G --time=2:00:00 --pty bash
+   ```
+7. Then, start running alphafold by submitting the following code:
+   ```
+   module load alphafold/2.3.1
+   ```
+
+### 2. Going to your Fastscratch: 
+
+![going to fastscratch 2](https://github.com/user-attachments/assets/2145dd27-b247-478a-a2d8-0a7bd986f333)
+
+**?? What is a "fastscratch" ??**
+- Your "fastscratch" is a TEMPORARY drive with 1Tb of space that can be used at any time.
+- However, unlike your personal drive of up to 100 Gb of space, anything you put in there will be deleted in 30 days, so make sure you download anything you want to keep!
+- We will be keeping our **FASTA files** in this drive, and this is also where Alphafold will put the outputs of its analysis
+- We want the outputs to go here because the outputs for each protein is around 2-3 Gbs in size.
+
+You can get to your fastscratch drive by replacing the current path to: 
+
+```
+/fastscratch/myscratch/[username]/
+```
+
+
+### 3. Uplad your python-made fasta folders onto FASTSCRATCH alphafold folder: 
+
+Since the python code **creates fasta_[]batch# folders** and inputs the same number of fasta files in each folder, there is no need make them manually
+
+All you need to do is **MAKE A FOLDER CALLED "alphafold" (no capital letters or spaces or other characters), and upload ALL of the folders onto the folder.  
+
+<img width="171" height="403" alt="Screenshot 2025-07-31 112601" src="https://github.com/user-attachments/assets/cb7ef340-a98f-43af-961c-16f567ba098d" />
+
+
+### 4. Upload the .sh, .slurm, and iptm_cs files onto your PERSONAL drive: 
+
+Go back to your **Personal Drive** via the path
+
+```
+/users/[username]/
+```
+
+Make a folder called "**alphafold**" and upload all of the .sh wrappers, .slurm files, and iptm_cs files onto this file
+
+
+### 5. Activate the .sh wrapper: 
+
+1. Change your SSH directory to your PERSONAL alphafold folder via the following code.
+  ```
+cd /users/[username]/alphafold/
+  ```
+2. Input the following code to activate the .sh wrapper for a specific batch:
+  ```
+chmod +x /path/to/file/run_[]batch[#]_wrapper.sh
+  ````
+3. Do this for ALL the .sh wrappers.
+   - You can copy paste multiple lines of code to make this easier + activate more than one wrapper at once
+
+
+### 6. Submit the job:
+
+Personalize and submit the following code:
+
+```
+sbatch /users/[username]/alphafold/batch??.slurm
+```
+
+(to check the job replace the ___ with the job number and submit)
+
+```
+sacct -j ________ --format=JobID,Elapsed,MaxRSS,MaxVMSize,ReqMem,State
+```
+
+### 7. Extract outputs: 
+
+When alphafold finishes a job, it will email you saying so. 
+
+To extract informations from the outputs, personalize and submit the following code: 
+
+```
+python extract_ptm_iptm_cs_[]batch[#].py
+```
 
 
 

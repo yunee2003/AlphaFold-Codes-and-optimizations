@@ -16,6 +16,7 @@ def letter_to_index(letter):
     return idx - 1
 
 # === Configuration ===
+YOUR_EMAIL      = "____"
 START_BATCH     = 1    # Starting batch number (inclusive)
 END_BATCH       = 5    # Ending batch number (inclusive)
 SM_PROT         = "T"  # e.g. "E" for EGF, "T" for TGFa, etc.
@@ -69,7 +70,7 @@ SLURM_TEMPLATE = """#!/bin/bash
 #SBATCH --output={sm_prot}batch{batch}_%j.out
 #SBATCH --error={sm_prot}batch{batch}_%j.err
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=YOUR_EMAIL@domain.com
+#SBATCH --mail-user={your_email}
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task={n_cpu}
 #SBATCH --mem=64G

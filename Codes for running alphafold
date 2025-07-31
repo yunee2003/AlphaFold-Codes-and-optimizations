@@ -17,3 +17,6 @@ sbatch /users/[username]/alphafold/batch??.slurm
 
 ## 4. Check the job (change jobID/replace region with _____ with the jobID)
 sacct -j ________ --format=JobID,Elapsed,MaxRSS,MaxVMSize,ReqMem,State
+
+## 5. After alphafold outputs its files, extract iptm information
+

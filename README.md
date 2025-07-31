@@ -47,6 +47,8 @@ FILES_PER_FOLDER  = 15    # how many fasta files per subfolder
 
 Just copy and paste the code! 
 
+---
+
 ## Making .sh or .slurm files 
 
 Personalize the following code: 
@@ -63,22 +65,55 @@ USER_NAME       = "(Your username)"     #Input ur SSH/JHPCE username
 SCRIPT_DIR      = r"C:\path\to\your\output\directory"  # Path to the output folder on your computer
 ```
 
+
 ### Changing the cluster directories
 
 You can change the paths to the following cluster/ssh directories if you wish to place ur files: 
 
 - For the "run_[]batch[]_wrapper.sh" files, the files are ASSUMED to be placed in your account's main directory, under the "alphafold" folder. However, if you would like to change this, edit the following code on the main code file:
 
+
 ```python
 SH_PATH   = "/users/{user_name}/alphafold/"    # On-cluster path to the .sh wrapper files (where u put the .sh files)
 ```
 
-Additionally, if you want to change the output directory from fastscratch (up to 1Tb of disk space) to your user directory (up to 100 Gb of disk space), change the path in the following code: 
+
+- Additionally, if you want to change the output directory from fastscratch (up to 1Tb of disk space) to your user directory (up to 100 Gb of disk space), change the path in the following code: 
+
 
 ```python
 FASTA_DIR_TEMPLATE = "/fastscratch/myscratch/{user_name}/alphafold/fasta_{sm_prot}batch{batch}"
 OUT_DIR_TEMPLATE   = "/fastscratch/myscratch/{user_name}/alphafold/outputs_{sm_prot}batch{batch}"
 ```
+
+## Making iptm_cs files 
+
+The iptm_cs files are used to analyze the files alphafold outputs onto your directory. They are also automated by python.
+
+Once you download the "PYTHON iptm_cs file writer" file, personalize the following code: 
+
+```python
+# === Configuration ===
+START_BATCH = #     # Starting batch number (inclusive)
+END_BATCH   = #      # Ending batch number (inclusive)
+SM_PROT = "T"   #
+USER_NAME =  "(user name)"     # input ur ssh/jhpce username
+
+BASE_DIR_TEMPLATE = "/fastscratch/myscratch/{user_name}/outputs_{sm_prot}batch{batch}"
+
+# Local output directory for generated scripts (within your computer)
+SCRIPT_DIR = r"path_to_your_folder"
+```
+
+Like the section above, you can edit the path for "Base_dir_template" if your product outputs are located somewhere else!
+
+---
+
+## Running Alphafold on Cluster (MobaXTerm)
+
+### 1. Log into the cluster + start alphafold: 
+
+
 
 
 

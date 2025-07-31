@@ -2,7 +2,7 @@
 
 # AlphaFold Codes and Optimizations
 
-Hi, these are the codes used for running AlphaFold version 2.3.1 on the JHPCE cluster via a __S__ecure __SH__ell (SSH). There are alot of preperations you must make before you can start running the batches. 
+Hi, these are the codes used for running AlphaFold version 2.3.1 on the JHPCE cluster via a **S**ecure **SH**ell (SSH). There are alot of preperations you must make before you can start running the batches. 
 
 ## Contents:
 

@@ -12,8 +12,8 @@ module load alphafold/2.3.1
 
 chmod +x /path/to/file/run_[]batch[#]_wrapper.sh    # Can be either /users/[username]/[folder]/....  or /fastscratch/myscratch/[username]/[folder]/....
 
-## 3. Submit the job
-sbatch /users/[username]/alphafold/batch??/batch??.slurm
+## 3. Personalize the code below and ubmit the job
+sbatch /users/[username]/alphafold/batch??.slurm
 
 ## 4. Check the job (change jobID/replace region with _____ with the jobID)
 sacct -j ________ --format=JobID,Elapsed,MaxRSS,MaxVMSize,ReqMem,State
